@@ -1,95 +1,49 @@
-import Image from "next/image";
+'use client'
+import { useRef, useState } from "react";
 import styles from "./page.module.css";
+import { io } from 'socket.io-client'
+interface Message {
+  content: string
+}
 
 export default function Home() {
+  const socket = io('http://localhost:3001')
+  socket.on('connect', () => {
+    console.log(`connect with ${socket.id}`)
+  } )
+  const [messages, setMessages] = useState<Message[]>([])
+  const messageRef = useRef<HTMLInputElement>(null)
+  const handleSubmit= (e:any) => {
+    e.preventDefault()
+   const newMessages = [...messages,{content: messageRef.current!.value}] 
+   setMessages(newMessages)
+  socket.emit('send-message', messageRef.current!.value)
+  }
+
+  // socket.on('connect', () => {
+  //  setMessages([...messages, { content: `connect with ${socket.id}` }])
+  // })
+
   return (
     <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+      <div className={styles.wrapper}>
+        <div className={styles.textArea}>
+          {messages.map(({content}, index) => (
+            <p className={styles.message} key={index} >{content}</p>
+          ))}
         </div>
       </div>
+      <div className={styles.formWrapper} >
+        <form className={styles.form}  action="">
+          <label htmlFor="message-input">Message</label>
+          <input ref={messageRef} type="text" id="message-input"/>
+          <button type="submit" id="send-button" onClick={handleSubmit} >Send</button>
+          <label htmlFor="room-input">Room</label>
+          <input type="text" id="room-input"/>
+          <button id="room-button" >Join</button>
+      </form>
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
       </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+          </main>
   );
 }
